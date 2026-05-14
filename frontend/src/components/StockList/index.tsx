@@ -39,7 +39,12 @@ interface Props {
 }
 
 // ── Sector Panel ──────────────────────────────────────────────────────────────
-function SectorPanel({ onSelectSector, selectedStock }: { onSelectSector: (ts: string, name: string) => void; selectedStock: string }) {
+function SectorPanel({ onSelectSector, selectedStock, stars, toggleStar }: {
+  onSelectSector: (ts: string, name: string) => void;
+  selectedStock: string;
+  stars: Set<string>;
+  toggleStar: (tsCode: string, e: React.MouseEvent) => void;
+}) {
   const [sectorList, setSectorList] = useState<{ indices: SectorIndex[]; sectors: SectorIndex[] }>({ indices: [], sectors: [] });
   const [rankData, setRankData] = useState<SectorRankResult[]>([]);
   const [rankLoading, setRankLoading] = useState(false);
@@ -104,15 +109,21 @@ function SectorPanel({ onSelectSector, selectedStock }: { onSelectSector: (ts: s
                   <div
                     key={item.ts_code}
                     onClick={() => onSelectSector(item.ts_code, item.name)}
-                    className={`flex items-center justify-between px-3 py-2 cursor-pointer border-b border-gray-800 transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-2 cursor-pointer border-b border-gray-800 transition-colors ${
                       selectedStock === item.ts_code ? 'bg-blue-900/40 border-l-2 border-l-blue-500' : 'hover:bg-gray-800/60'
                     }`}
                   >
-                    <div className="flex flex-col">
+                    <button
+                      onClick={(e) => toggleStar(item.ts_code, e)}
+                      className={`flex-shrink-0 transition-colors ${stars.has(item.ts_code) ? 'text-yellow-400' : 'text-gray-600 hover:text-gray-400'}`}
+                    >
+                      <Star className={`w-3.5 h-3.5 ${stars.has(item.ts_code) ? 'fill-current' : ''}`} />
+                    </button>
+                    <div className="flex flex-col flex-1 min-w-0">
                       <span className="text-sm text-white">{item.name}</span>
                       <span className="text-[10px] text-gray-500">{item.ts_code}</span>
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300">指数</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300 flex-shrink-0">指数</span>
                   </div>
                 ))}
                 {sectorList.sectors.length > 0 && (
@@ -122,12 +133,18 @@ function SectorPanel({ onSelectSector, selectedStock }: { onSelectSector: (ts: s
                   <div
                     key={item.ts_code}
                     onClick={() => onSelectSector(item.ts_code, item.name)}
-                    className={`flex items-center justify-between px-3 py-2 cursor-pointer border-b border-gray-800 transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-2 cursor-pointer border-b border-gray-800 transition-colors ${
                       selectedStock === item.ts_code ? 'bg-blue-900/40 border-l-2 border-l-blue-500' : 'hover:bg-gray-800/60'
                     }`}
                   >
-                    <span className="text-sm text-white">{item.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-300">板块</span>
+                    <button
+                      onClick={(e) => toggleStar(item.ts_code, e)}
+                      className={`flex-shrink-0 transition-colors ${stars.has(item.ts_code) ? 'text-yellow-400' : 'text-gray-600 hover:text-gray-400'}`}
+                    >
+                      <Star className={`w-3.5 h-3.5 ${stars.has(item.ts_code) ? 'fill-current' : ''}`} />
+                    </button>
+                    <span className="text-sm text-white flex-1 truncate">{item.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-300 flex-shrink-0">板块</span>
                   </div>
                 ))}
               </>
@@ -153,6 +170,12 @@ function SectorPanel({ onSelectSector, selectedStock }: { onSelectSector: (ts: s
                       selectedStock === r.ts_code ? 'bg-blue-900/40 border-l-2 border-l-blue-500' : ''
                     }`}
                   >
+                    <button
+                      onClick={(e) => toggleStar(r.ts_code, e)}
+                      className={`flex-shrink-0 mr-1 transition-colors ${stars.has(r.ts_code) ? 'text-yellow-400' : 'text-gray-600 hover:text-gray-400'}`}
+                    >
+                      <Star className={`w-3 h-3 ${stars.has(r.ts_code) ? 'fill-current' : ''}`} />
+                    </button>
                     <div className={`w-8 text-center text-xs font-bold ${scoreColor(r.score)}`}>
                       {r.score}
                     </div>
@@ -233,7 +256,7 @@ export default function StockList({ onSelectStock, selectedStock, onSelectSector
       </div>
 
       {mainTab === 'sectors' ? (
-        <SectorPanel onSelectSector={onSelectSector} selectedStock={selectedStock} />
+        <SectorPanel onSelectSector={onSelectSector} selectedStock={selectedStock} stars={stars} toggleStar={toggleStar} />
       ) : (
         <>
           <div className="p-3 border-b border-gray-700">
@@ -303,7 +326,7 @@ export default function StockList({ onSelectStock, selectedStock, onSelectSector
                   <div className="flex items-center gap-1.5 min-w-0">
                     <button
                       onClick={(e) => toggleStar(stock.ts_code, e)}
-                      className={`flex-shrink-0 transition-colors ${stars.has(stock.ts_code) ? 'text-yellow-400' : 'text-gray-700 hover:text-gray-400'}`}
+                      className={`flex-shrink-0 transition-colors ${stars.has(stock.ts_code) ? 'text-yellow-400' : 'text-gray-600 hover:text-gray-400'}`}
                     >
                       <Star className={`w-3.5 h-3.5 ${stars.has(stock.ts_code) ? 'fill-current' : ''}`} />
                     </button>

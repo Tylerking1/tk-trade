@@ -8,8 +8,8 @@ import Toolbar from './components/Toolbar'
 import KLineChartView from './components/Chart'
 import Screener from './components/Screener'
 import type { DrawingTool, AIScore } from './types'
-import { fetchSectorKline, fetchAIScore } from './services/api'
-import type { KlineItem } from './types'
+import { fetchSectorKline, fetchAIScore, fetchSectorPatterns } from './services/api'
+import type { KlineItem, Patterns } from './types'
 
 const formatDate = (d: Date): string =>
   d.toISOString().slice(0, 10).replace(/-/g, '')
@@ -30,6 +30,7 @@ function App() {
   const [sectorKlineData, setSectorKlineData] = useState<KlineItem[]>([])
   const [sectorLoading, setSectorLoading] = useState(false)
   const [sectorAiScore, setSectorAiScore] = useState<AIScore | null>(null)
+  const [sectorPatterns, setSectorPatterns] = useState<Patterns | null>(null)
   const [activeTool, setActiveTool] = useState<DrawingTool>(null)
   const [autoDrawPatterns, setAutoDrawPatterns] = useState<boolean>(false)
   const [clearDrawingsSignal, setClearDrawingsSignal] = useState<number>(0)
@@ -50,11 +51,15 @@ function App() {
     if (selectedTsCode && isSector) {
       setSectorLoading(true)
       setSectorAiScore(null)
+      setSectorPatterns(null)
       fetchSectorKline({ ts_code: selectedTsCode, start_date: dateRange.start, end_date: dateRange.end })
         .then((res) => setSectorKlineData(res.data))
         .catch(() => {})
         .finally(() => setSectorLoading(false))
-      // Fetch AI score for sector separately (non-blocking)
+      // Fetch patterns and AI score in parallel (non-blocking)
+      fetchSectorPatterns({ ts_code: selectedTsCode, start_date: dateRange.start, end_date: dateRange.end })
+        .then((res) => setSectorPatterns(res.patterns))
+        .catch(() => setSectorPatterns(null))
       fetchAIScore({ ts_code: selectedTsCode })
         .then((res: any) => {
           if (res && typeof res.score === 'number' && Array.isArray(res.signals)) {
@@ -91,6 +96,7 @@ function App() {
     setIsSector(true)
     setSectorKlineData([])
     setSectorAiScore(null)
+    setSectorPatterns(null)
   }
 
   const handleSelectTool = (tool: DrawingTool) => {
@@ -108,7 +114,7 @@ function App() {
   // Active chart data: sector kline or stock kline
   const activeKlineData = isSector ? sectorKlineData : klineData
   const activeLoading = isSector ? sectorLoading : loading
-  const activePatterns = isSector ? null : patterns
+  const activePatterns = isSector ? sectorPatterns : patterns
 
   // Derive latest close and pct change
   const latestClose =

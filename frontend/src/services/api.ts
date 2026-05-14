@@ -114,3 +114,12 @@ export async function fetchSectorRank(): Promise<{ data: SectorRankResult[]; tot
   const { data } = await api.get('/sectors/rank');
   return data;
 }
+
+export async function fetchSectorPatterns(params: {
+  ts_code: string;
+  start_date?: string;
+  end_date?: string;
+}): Promise<{ patterns: Patterns }> {
+  const { data } = await api.get('/sectors/patterns', { params });
+  return data;
+}

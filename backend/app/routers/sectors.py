@@ -6,6 +6,7 @@ from app.services.sector_service import (
     get_sector_rank,
     MARKET_INDICES,
 )
+from app.services.pattern_service import detect_all_patterns
 
 router = APIRouter(prefix="/api/sectors", tags=["sectors"])
 
@@ -70,3 +71,17 @@ async def sector_rank():
     """Return all sectors and indices scored and sorted by composite strength."""
     results = get_sector_rank()
     return {"data": results, "total": len(results)}
+
+
+@router.get("/patterns")
+async def sector_patterns(
+    ts_code: str = Query(..., description="指数/板块代码"),
+    start_date: str = Query("", description="开始日期 YYYYMMDD"),
+    end_date: str = Query("", description="结束日期 YYYYMMDD"),
+):
+    """Detect chart patterns for a sector/index using the same algorithm as stocks."""
+    df = get_sector_daily(ts_code, start_date, end_date)
+    if df.empty:
+        return {"patterns": {}}
+    patterns = detect_all_patterns(df)
+    return {"patterns": patterns}
